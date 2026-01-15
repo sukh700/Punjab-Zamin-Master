@@ -214,11 +214,16 @@ def main(page: ft.Page):
             # ਟੇਬਲ ਹੈਡਰ (Table Header)
             pdf.set_font('helvetica', 'B', 10)
             pdf.set_fill_color(240, 240, 240)
-            pdf.cell(40, 8, text="Action", border=1, fill=True)
-            pdf.cell(100, 8, text="Details (Input/Fraction)", border=1, fill=True)
-            pdf.cell(50, 8, text="Area Result", border=1, fill=True, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-            pdf.set_font('helvetica', '', 10) 
+            w_act = 15   # Action ਲਈ ਛੋਟਾ ਡੱਬਾ
+            w_det = 75   # Details ਲਈ ਡੱਬਾ
+            w_res = 100
+
+            pdf.cell(w_act, 8, text="Act", border=1, fill=True, align='C')
+            pdf.cell(w_det, 8, text="Details (Input/Fraction)", border=1, fill=True, align='C')
+            pdf.cell(w_res, 8, text="Area Result", border=1, fill=True, align='C', new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+            pdf.set_font('helvetica', '', 9) 
             for entry_str in history_data:
                 if pdf.get_y() > 250: pdf.add_page()
                 
@@ -232,9 +237,13 @@ def main(page: ft.Page):
                     area = parts[2].encode('ascii', 'ignore').decode('ascii')
                     
                     # ਰੋਅ (Row) ਪ੍ਰਿੰਟ ਕਰੋ
-                    pdf.cell(40, 8, text=label, border=1)
-                    pdf.cell(100, 8, text=detail, border=1)
-                    pdf.cell(50, 8, text=area, border=1, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                    curr_y = pdf.get_y()
+                    
+                    pdf.multi_cell(w_act, 8, text=label, border=1, align='C', new_x=XPos.RIGHT, new_y=YPos.TOP)
+                    pdf.multi_cell(w_det, 8, text=detail, border=1, align='L', new_x=XPos.RIGHT, new_y=YPos.TOP)
+                    # Area Result ਹੁਣ 100mm ਚੌੜਾ ਹੈ ਅਤੇ wrap ਹੋਵੇਗਾ
+                    pdf.multi_cell(w_res, 8, text=area, border=1, align='L', new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                
                 pdf.ln(1)
 
             # --- Signatures ---
@@ -245,9 +254,37 @@ def main(page: ft.Page):
             pdf.cell(95, 5, text="Customer Signature", align='C')
             pdf.cell(95, 5, text="Authorized Sign", align='C')
 
-            fname = f"Land_Report_{datetime.datetime.now().strftime('%H%M%S')}.pdf"
-            pdf.output(fname)
-            os.startfile(fname)
+            # --- ਪੁਰਾਣਾ ਕੋਡ ਹਟਾ ਕੇ ਇਹ ਲਿਖੋ ---
+            current_time = datetime.datetime.now().strftime('%H%M%S')
+            fname = f"Land_Report_{current_time}.pdf"
+
+            # ਮੋਬਾਈਲ ਅਤੇ ਲੈਪਟਾਪ ਲਈ ਸਹੀ ਪਾਥ ਚੁਣਨਾ
+            if os.getenv("ANDROID_ROOT"):
+                # ਮੋਬਾਈਲ ਦੇ 'Download' ਫੋਲਡਰ ਵਿੱਚ ਸੇਵ ਹੋਵੇਗੀ
+                save_path = f"/storage/emulated/0/Download/{fname}"
+            else:
+                # ਲੈਪਟਾਪ 'ਤੇ ਉਸੇ ਫੋਲਡਰ ਵਿੱਚ ਸੇਵ ਹੋਵੇਗੀ
+                save_path = fname
+
+            # PDF ਸੇਵ ਕਰਨਾ
+            pdf.output(save_path)
+
+            # ਯੂਜ਼ਰ ਨੂੰ ਮੈਸੇਜ ਦਿਖਾਉਣਾ
+            if os.getenv("ANDROID_ROOT"):
+                page.snack_bar = ft.SnackBar(ft.Text(f"PDF ਸੇਵ ਹੋ ਗਈ: Downloads/{fname}"))
+            else:
+                # ਲੈਪਟਾਪ 'ਤੇ ਫਾਈਲ ਆਪਣੇ ਆਪ ਖੋਲ੍ਹੋ
+                os.startfile(save_path)
+                page.snack_bar = ft.SnackBar(ft.Text("PDF ਤਿਆਰ ਹੈ!"))
+            
+            page.snack_bar.open = True
+            page.update()
+            
+        except Exception as ex: 
+            # ਗਲਤੀ ਨੂੰ ਸਕ੍ਰੀਨ 'ਤੇ ਦਿਖਾਓ
+            page.snack_bar = ft.SnackBar(ft.Text(f"ਗਲਤੀ: {str(ex)}"))
+            page.snack_bar.open = True
+            page.update()
             
         except Exception as ex: 
             print(f"PDF Error: {ex}")
@@ -912,4 +949,4 @@ def main(page: ft.Page):
 
 # ਐਪ ਨੂੰ ਚਲਾਉਣ ਲਈ
 if __name__ == "__main__":
-    ft.app(target=main, view=ft.AppView.WEB_BROWSER, host="0.0.0.0", port=8550)
+    ft.app(target=main, view=ft.AppView.WEB_BROWSER)
