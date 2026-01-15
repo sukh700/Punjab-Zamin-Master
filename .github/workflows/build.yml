@@ -1,0 +1,27 @@
+name: Build Flet APK
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Install Python Dependencies
+        run: |
+          pip install flet fpdf2
+
+      - name: Build APK
+        run: |
+          flet build apk --project-name "PunjabZaminMaster" --main-script-name land_app.py
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Punjab-Zamin-Master-APK
+          path: build/apk/*.apk
