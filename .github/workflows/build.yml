@@ -12,17 +12,17 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: Install Python Dependencies
+      - name: Install Dependencies
         run: |
           pip install flet fpdf2
 
       - name: Build APK
         run: |
-          # ਨਵਾਂ ਅਤੇ ਸਹੀ ਤਰੀਕਾ
-          flet build apk land_app.py
-
+          # ਕਿਉਂਕਿ ਤੁਸੀਂ ਫਾਈਲ ਦਾ ਨਾਮ main.py ਰੱਖ ਦਿੱਤਾ ਹੈ, ਹੁਣ ਸਿਰਫ਼ ਇਹ ਕਮਾਂਡ ਚੱਲੇਗੀ
+          flet build apk
+          
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Punjab-Zamin-Master-APK
+          name: Punjab-Zamin-APK
           path: build/apk/*.apk
